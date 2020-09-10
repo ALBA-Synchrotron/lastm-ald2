@@ -60,7 +60,7 @@ class ald_run(Macro):
         conf_file = self.execMacro("ald_get_conf").getResult()
         self.info("Configuration: %s" % conf_file)
         alarm = False
-        for i in xrange(repeats):
+        for i in range(repeats):
             self.info("Running %d repetition" % (i + 1))
             meas_grp.count(0.001)
             time.sleep(wait_time)

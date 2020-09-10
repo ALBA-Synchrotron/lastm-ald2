@@ -154,7 +154,7 @@ class RasPiTangoDOCallback(EventReceiver):
             return
         try:
             self.ctrl.device.write_attributes(pairs)
-        except Exception, e:
+        except Exception as e:
             self.ctrl._log.error("Exception while handling callback:", exc_info=True)
             self.ctrl._log.debug("Stopping generation...")
             idx = self.axis - 1
