@@ -178,7 +178,7 @@ class ALDTangoTGCtrl(TriggerGateController):
     organization = "ALBA-Cells"
     MaxDevice = 1
 
-    class_prop = {
+    ctrl_properties = {
         "Device": {Type: str,
                    Description: "Raspberry PI device"}
     }
