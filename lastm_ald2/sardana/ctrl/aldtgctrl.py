@@ -138,22 +138,12 @@ class RasPiTangoDOCallback(EventReceiver):
         attr_name = "Pin%d_voltage" % self.axis
         if type_.name == "active":
             voltage = True
-            pairs = [(attr_name, voltage)]
-            if self.axis == 3:
-                pairs.append(("Pin5_voltage", False))
-            elif self.axis == 5:
-                pairs.append(("Pin3_voltage", True))
         elif type_.name == "passive":
-            if self.axis == 5:
-                pairs = [("Pin3_voltage", False),
-                         ("Pin5_voltage", False)]
-            else:
-                voltage = False
-                pairs = [(attr_name, voltage)]
+            voltage = False
         else:
             return
         try:
-            self.ctrl.device.write_attributes(pairs)
+            self.ctrl.device.write_attribute(attr_name, voltage)
         except Exception as e:
             self.ctrl._log.error("Exception while handling callback:", exc_info=True)
             self.ctrl._log.debug("Stopping generation...")
