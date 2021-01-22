@@ -101,6 +101,7 @@ class ald_init(Macro):
         ctrl_proxy = ctrl.getDeviceProxy()
         raspi_name = ctrl_proxy.get_property("device")["device"][0]
         raspi_proxy = tango.DeviceProxy(raspi_name)
+        axes.append(8)  # ozonizer
         for axis in axes:
             self.output("Setting PIN %d to output" % axis)
             raspi_proxy.write_attribute("pin%d_output" % axis, True)
