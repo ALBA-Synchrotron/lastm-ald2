@@ -68,7 +68,7 @@ class ald_run(Macro):
     macro"""
 
     env = ("ALDMeasGrp",)
-
+    hints = {"allowsHooks": ("post-cycle", )}
     param_def = [["repeats", Type.Integer, 1, "Number of repetitions"],
                  ["wait_time", Type.Float, 0, "Wait time (s) between "
                                               "repetitions"]]
@@ -87,8 +87,11 @@ class ald_run(Macro):
         self.info("Configuration: %s" % conf_file)
         alarm = False
         for i in range(repeats):
+            self.cycle_nb = i
             self.info("Running %d repetition" % (i + 1))
             meas_grp.count(0.001)
+            for hook in self.getHooks("post_cycle"):
+                hook()
             time.sleep(wait_time)
             for tg in tgs:
                 if tg.State() != tango.DevState.ON:
