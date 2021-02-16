@@ -1,11 +1,19 @@
 import time
+import json
 
 import tango
+import taurus
+
 from sardana.macroserver.macro import Macro, Type
+from sardana.taurus.core.tango.sardana.macroserver import registerExtensions
+
 
 __author__ = "zreszela@cells.es"
 __docformat__ = "restructuredtext"
 __all__ = ("ald_set_conf", "ald_get_conf", "ald_run")
+
+
+registerExtensions()
 
 
 class ald_set_conf(Macro):
@@ -35,6 +43,24 @@ class ald_get_conf(Macro):
         ctrl_name = self.getEnv("ALDTGCtrl")
         ctrl = self.getController(ctrl_name)
         return ctrl.getAttribute("ConfigurationFile").read().value
+
+
+class _post_cycle_remote_job(Macro):
+    """Execute post-cycle job at the remote Door e.g. beamline.
+
+    This macro is intended to be attached to the ald_run macro
+    at the post-cycle hook place.
+    """
+
+    env= ("RemoteDoor", )
+
+    def run(self):
+       remote_door = self.getEnv("RemoteDoor")
+       self.debug("Executing ald_post_cycle_job on {}".format(remote_door))
+       remote_door = taurus.Device(remote_door)
+       cycle_nb = self.parent_macro.cycle_nb
+       info = json.dumps({"cycle_nb": cycle_nb})
+       door.runMacro("ald_post_cycle_job", [info], synch=True)
 
 
 class ald_run(Macro):
