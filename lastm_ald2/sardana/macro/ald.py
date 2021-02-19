@@ -4,7 +4,7 @@ import json
 import tango
 import taurus
 
-from sardana.macroserver.macro import Macro, Type
+from sardana.macroserver.macro import Macro, Type, Hookable
 from sardana.taurus.core.tango.sardana.macroserver import registerExtensions
 
 
@@ -55,15 +55,15 @@ class _post_cycle_remote_job(Macro):
     env= ("RemoteDoor", )
 
     def run(self):
-       remote_door = self.getEnv("RemoteDoor")
-       self.debug("Executing ald_post_cycle_job on {}".format(remote_door))
-       remote_door = taurus.Device(remote_door)
-       cycle_nb = self.parent_macro.cycle_nb
-       info = json.dumps({"cycle_nb": cycle_nb})
-       door.runMacro("ald_post_cycle_job", [info], synch=True)
+        remote_door = self.getEnv("RemoteDoor")
+        self.debug("Executing ald_post_cycle_job on {}".format(remote_door))
+        remote_door = taurus.Device(remote_door)
+        cycle_nb = self.parent_macro.cycle_nb
+        info = json.dumps({"cycle_nb": cycle_nb})
+        remote_door.runMacro("ald_post_cycle_job", [info], synch=True)
 
 
-class ald_run(Macro):
+class ald_run(Macro, Hookable):
     """Execute ALD according to configuration file set with ald_set_conf
     macro"""
 
@@ -90,7 +90,7 @@ class ald_run(Macro):
             self.cycle_nb = i
             self.info("Running %d repetition" % (i + 1))
             meas_grp.count(0.001)
-            for hook in self.getHooks("post_cycle"):
+            for hook in self.getHooks("post-cycle"):
                 hook()
             time.sleep(wait_time)
             for tg in tgs:
