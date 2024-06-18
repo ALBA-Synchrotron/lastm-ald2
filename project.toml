@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+
+[project]
+name = "aldtgctrl"
+version = "0.1.0"
+description = "A Python project for controlling ALD Trigger Gate"
+authors = ["zreszela@cells.es"]
+readme = "README.md"
+requires-python = ">=3.6"
+
+[project.urls]
+Source = "https://github.com/ALBA-Synchrotron/lastm-ald2.git"
+
+[project.scripts]
+run = "aldtgctrl:main"
+
+[project.dependencies]
+PyTango = "*"
+sardana = "*"
+
+[project.dev-dependencies]
+pytest = "*"
