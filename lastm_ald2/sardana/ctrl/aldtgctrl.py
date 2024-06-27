@@ -8,7 +8,7 @@ from sardana import State
 from sardana.sardanaevent import EventReceiver
 from sardana.util.funcgenerator import FunctionGenerator
 from sardana.pool.controller import TriggerGateController, Type, \
-    Description, Access, DataAccess
+    Description, Access, DataAccess, DefaultValue
 from sardana.pool.pooldefs import SynchDomain
 
 
@@ -142,7 +142,7 @@ class RasPiTangoDOCallback(EventReceiver):
         elif controller_system == 'ald2':
             self.ald2_protection()
         else:
-            print(f"Unknown controller system: {controller_system}")
+            self.ctrl._log.error("Unknown controller system")
     
     def ald2_protection(self, src, type_, value):
         attr_name = "Pin%d_voltage" % self.axis
@@ -228,7 +228,8 @@ class ALDTangoTGCtrl(TriggerGateController):
         "Device": {Type: str,
                    Description: "Raspberry PI device"},
         "System": {Type: str,
-                     Description: "ald1 or ald2"}
+                   DefaultValue: "ald2",
+                   Description: "ald1 or ald2"}
     }
 
     ctrl_attributes = {
