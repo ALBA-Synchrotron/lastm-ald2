@@ -122,7 +122,7 @@ class ald_init(Macro):
     """
 
     env = ("ALDTGCtrl",)
-
+    VACUUM = [13, 15, 16] #vacuum valves
     def run(self):
         ctrl_name = self.getEnv("ALDTGCtrl")
         ctrl = self.getController(ctrl_name)
@@ -130,10 +130,15 @@ class ald_init(Macro):
         ctrl_proxy = ctrl.getDeviceProxy()
         raspi_name = ctrl_proxy.get_property("device")["device"][0]
         raspi_proxy = tango.DeviceProxy(raspi_name)
-        axes.extend([13, 15, 16]) # vacuum valves 
+        axes.extend(self.VACUUM) # vacuum valves 
         # TODO: add support for ozonizer using pin 32 (if possible)
         # See https://jira.cells.es/browse/CSGSW-4418
         for axis in axes:
             self.output("Setting PIN %d to output" % axis)
             raspi_proxy.write_attribute("pin%d_output" % axis, True)
+            if axis in self.VACUUM:
+                continue
+            time.sleep(0.01)
+            self.output('Setting PIN %d voltage to False', axis)
+            raspi_proxy.write_attribute('pin%d_voltage' %axis, False)
 
