@@ -138,9 +138,9 @@ class RasPiTangoDOCallback(EventReceiver):
         controller_system = self.ctrl.System
 
         if controller_system == 'ald1':
-            self.ald1_protection()
+            self.ald1_protection(src, type_, value)
         elif controller_system == 'ald2':
-            self.ald2_protection()
+            self.ald2_protection(src, type_, value)
         else:
             self.ctrl._log.error("Unknown controller system")
     
@@ -270,6 +270,8 @@ class ALDTangoTGCtrl(TriggerGateController):
         idx = axis - 1
         tg = self.tg[idx]
         # due to sardana-org/sardana#787 use lowercase
+        if hasattr(self,'_ConfigurationFile'):
+            self._configurationfile= self._ConfigurationFile
         if not hasattr(self, "_configurationfile"):
             raise RuntimeError("controller's ConfigurationFile is not set")
         # remove configuration module from sys.modules in order to
