@@ -18,8 +18,8 @@ __all__ = ("ALDTGCtrl", "ALDTangoTGCtrl")
 
 
 axis2valve = {
-    3: "valve1",
-    5: "valve2",
+    29: "valve1",
+    33: "valve2",
     7: "valve3",
     11: "valve4",
     12: "valve5",
@@ -148,13 +148,13 @@ class RasPiTangoDOCallback(EventReceiver):
         attr_name = "Pin%d_voltage" % self.axis
         if type_.name == "active":
             voltage = True
-            if self.axis == 3:
-                if self.ctrl.device.read_attribute("Pin7_voltage")==True:
+            if self.axis == 29:
+                if self.ctrl.device.read_attribute("Pin7_voltage").value==True:
                     voltage = False
                 else:
                     voltage = True
             elif self.axis == 7:
-                if self.ctrl.device.read_attribute("Pin3_voltage")==True:
+                if self.ctrl.device.read_attribute("Pin29_voltage").value==True:
                     voltage = False
                 else:
                     voltage = True
