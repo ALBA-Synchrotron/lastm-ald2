@@ -8,7 +8,7 @@ from sardana import State
 from sardana.sardanaevent import EventReceiver
 from sardana.util.funcgenerator import FunctionGenerator
 from sardana.pool.controller import TriggerGateController, Type, \
-    Description, Access, DataAccess
+    Description, Access, DataAccess, DefaultValue
 from sardana.pool.pooldefs import SynchDomain
 
 
@@ -18,8 +18,8 @@ __all__ = ("ALDTGCtrl", "ALDTangoTGCtrl")
 
 
 axis2valve = {
-    3: "valve1",
-    5: "valve2",
+    29: "valve1",
+    33: "valve2",
     7: "valve3",
     11: "valve4",
     12: "valve5",
@@ -134,10 +134,30 @@ class RasPiTangoDOCallback(EventReceiver):
         self.ctrl = ctrl
         self.axis = axis
 
-    def event_received(self, src, type_, value):
+    def event_received(self, src, type_, value): 
+        controller_system = self.ctrl.System
+
+        if controller_system == 'ald1':
+            self.ald1_protection(src, type_, value)
+        elif controller_system == 'ald2':
+            self.ald2_protection(src, type_, value)
+        else:
+            self.ctrl._log.error("Unknown controller system")
+    
+    def ald2_protection(self, src, type_, value):
         attr_name = "Pin%d_voltage" % self.axis
         if type_.name == "active":
             voltage = True
+            if self.axis == 29:
+                if self.ctrl.device.read_attribute("Pin7_voltage").value==True:
+                    voltage = False
+                else:
+                    voltage = True
+            elif self.axis == 7:
+                if self.ctrl.device.read_attribute("Pin29_voltage").value==True:
+                    voltage = False
+                else:
+                    voltage = True
         elif type_.name == "passive":
             voltage = False
         else:
@@ -161,6 +181,42 @@ class RasPiTangoDOCallback(EventReceiver):
             status += " failed. Check Pool logs for more details."
             self.ctrl.status[idx] = status
 
+    def ald1_protection(self, src, type_, value):
+        attr_name = "Pin%d_voltage" % self.axis
+        if type_.name == "active":
+            voltage = True
+            pairs = [(attr_name, voltage)]
+            if self.axis == 3:
+                pairs.append(("Pin5_voltage", False))
+            elif self.axis == 5:
+                pairs.append(("Pin3_voltage", True))
+        elif type_.name == "passive":
+            if self.axis == 5:
+                pairs = [("Pin3_voltage", False),
+                         ("Pin5_voltage", False)]
+            else:
+                voltage = False
+                pairs = [(attr_name, voltage)]
+        else:
+            return
+        try:
+            self.ctrl.device.write_attributes(pairs)
+        except Exception as e:
+            self.ctrl._log.error("Exception while handling callback:", exc_info=True)
+            self.ctrl._log.debug("Stopping generation...")
+            idx = self.axis - 1
+            self.ctrl.tg[idx].stop()
+            self.ctrl.state[idx] = State.Alarm
+            status = "Setting "
+            attr, voltage = pairs[0]
+            status += "{0} to {1}".format(attr, voltage)
+            try:
+                attr, voltage = pairs[1]
+                status += " and {0} to {1}".format(attr, voltage)
+            except IndexError:
+                pass
+            status += " failed. Check Pool logs for more details."
+            self.ctrl.status[idx] = status
 
 class ALDTangoTGCtrl(TriggerGateController):
     """Basic controller intended for demonstration purposes only.
@@ -170,7 +226,10 @@ class ALDTangoTGCtrl(TriggerGateController):
 
     ctrl_properties = {
         "Device": {Type: str,
-                   Description: "Raspberry PI device"}
+                   Description: "Raspberry PI device"},
+        "System": {Type: str,
+                   DefaultValue: "ald2",
+                   Description: "ald1 or ald2"}
     }
 
     ctrl_attributes = {
@@ -211,6 +270,8 @@ class ALDTangoTGCtrl(TriggerGateController):
         idx = axis - 1
         tg = self.tg[idx]
         # due to sardana-org/sardana#787 use lowercase
+        if hasattr(self,'_ConfigurationFile'):
+            self._configurationfile= self._ConfigurationFile
         if not hasattr(self, "_configurationfile"):
             raise RuntimeError("controller's ConfigurationFile is not set")
         # remove configuration module from sys.modules in order to
